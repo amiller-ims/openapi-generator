@@ -1,0 +1,68 @@
+{{>partial_header}}
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+{{#operationResultTask}}
+using System.Threading.Tasks;
+{{/operationResultTask}}
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+{{#useSwashbuckle}}
+using Swashbuckle.AspNetCore.Annotations;
+{{/useSwashbuckle}}
+{{^isLibrary}}
+using Newtonsoft.Json;
+{{/isLibrary}}
+using {{packageName}}.Attributes;
+using {{modelPackage}};
+
+namespace {{apiPackage}}
+{ {{#operations}}
+    /// <summary>
+    /// {{description}}
+    /// </summary>{{#description}}
+    [Description("{{description}}")]{{/description}}
+    [ApiController]
+    public {{#classModifier}}{{classModifier}} {{/classModifier}}class {{classname}}Controller : ControllerBase
+    { {{#operation}}
+        /// <summary>
+        /// {{#summary}}{{summary}}{{/summary}}
+        /// </summary>{{#notes}}
+        /// <remarks>{{notes}}</remarks>{{/notes}}{{#allParams}}
+        /// <param name="{{paramName}}">{{description}}</param>{{/allParams}}{{#responses}}
+        /// <response {{^wildcard}}code="{{code}}"{{/wildcard}}{{#wildcard}}default="true"{{/wildcard}}>{{message}}</response>{{/responses}}
+        [{{httpMethod}}]
+        [Route("{{{basePathWithoutHost}}}{{{path}}}")]{{#consumes}}
+        [Consumes("{{{mediaType}}}")]{{/consumes}}{{#produces}}
+        [Produces("{{{mediaType}}}")]{{/produces}}
+        [ValidateModelState]{{#useSwashbuckle}}{{#responses}}
+        {{#wildcard}}[ProducesDefaultResponseType{{#dataType}}(typeof({{&dataType}})){{/dataType}}]{{/wildcard}}{{^wildcard}}[SwaggerResponse(statusCode: {{code}}{{#dataType}}, type: typeof({{&dataType}}){{/dataType}}{{#message}}, description: "{{message}}"{{/message}})]{{/wildcard}}{{/responses}}{{/useSwashbuckle}}{{#authMethods}}{{{#isOAuth}}}
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]{{{/isOAuth}}}{{/authMethods}}
+        public {{operationModifier}} {{#operationResultTask}}{{#operationIsAsync}}async {{/operationIsAsync}}Task<{{/operationResultTask}}IActionResult{{#operationResultTask}}>{{/operationResultTask}} {{operationId}}({{#allParams}}{{>pathParam}}{{>queryParam}}{{>bodyParam}}{{>formParam}}{{>headerParam}}{{#hasMore}}, {{/hasMore}}{{/allParams}}){{^generateBody}};{{/generateBody}}
+        {{#generateBody}}
+        { {{#responses}}{{^wildcard}}
+{{#dataType}}
+            //TODO: Uncomment the next line to return response {{code}} or use other options such as return this.NotFound(), return this.BadRequest(..), ...
+            // return StatusCode({{code}}, default({{&dataType}}));
+{{/dataType}}
+{{^dataType}}
+            //TODO: Uncomment the next line to return response {{code}} or use other options such as return this.NotFound(), return this.BadRequest(..), ...
+            // return StatusCode({{code}});
+{{/dataType}}{{/wildcard}}{{/responses}}
+{{#returnType}}
+            string exampleJson = null;
+            {{#examples}}
+            exampleJson = "{{{example}}}";
+            {{/examples}}
+            {{#isListCollection}}{{>listReturn}}{{/isListCollection}}{{^isListCollection}}{{#isMapContainer}}{{>mapReturn}}{{/isMapContainer}}{{^isMapContainer}}{{>objectReturn}}{{/isMapContainer}}{{/isListCollection}}
+            {{!TODO: defaultResponse, examples, auth, nickname, externalDocs, imports, security}}
+            //TODO: Change the data returned
+            return {{#operationResultTask}}Task.FromResult<IActionResult>({{/operationResultTask}}new ObjectResult(example){{#operationResultTask}}){{/operationResultTask}};{{/returnType}}{{^returnType}}
+            throw new NotImplementedException();{{/returnType}}
+        }
+        {{/generateBody}}
+        {{/operation}}
+    }
+{{/operations}}
+}

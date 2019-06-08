@@ -1,0 +1,33 @@
+<Project Sdk="{{projectSdk}}">
+  <PropertyGroup>
+    <Description>{{packageName}}</Description>
+    <Copyright>{{packageName}}</Copyright>
+    <TargetFramework>netcoreapp{{aspnetCoreVersion}}</TargetFramework>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PreserveCompilationContext>true</PreserveCompilationContext>
+{{#isLibrary}}
+    <OutputType>Library</OutputType>
+{{/isLibrary}}
+    <AssemblyName>{{packageName}}</AssemblyName>
+    <PackageId>{{packageName}}</PackageId>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+{{#authMethods}}{{{#isOAuth}}}
+    <PackageReference Include="IdentityServer4" Version="2.4.0" />
+    <PackageReference Include="IdentityServer4.AccessTokenValidation" Version="2.7.0" />
+
+    <PackageReference Include="Serilog" Version="2.8.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="2.1.1" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
+{{/authMethods}}{{{/isOAuth}}}    
+{{#useSwashbuckle}}
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="4.0.1"/>
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="4.0.1" />
+{{/useSwashbuckle}}
+  </ItemGroup>
+  <ItemGroup>
+    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.3" />
+  </ItemGroup>
+</Project>
