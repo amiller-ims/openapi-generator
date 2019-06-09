@@ -328,7 +328,7 @@ public class InlineModelResolver {
                     if (existing == null) {
                         openAPI.getComponents().addSchemas(innerModelName, innerModel);
                         addGenerated(innerModelName, innerModel);
-                        Schema schema = new Schema().$ref(innerModelName);
+                        Schema schema = new Schema().$ref("#/components/schemas/" + innerModelName);
                         schema.setRequired(op.getRequired());
                         listIterator.set(schema);
                     } else {
