@@ -289,7 +289,9 @@ public class AspNetCoreIs4ServerCodegen extends AbstractCSharpCodegen {
                     packageFolder + File.separator + "wwwroot", "openapi-original.json"));
             
             // IdentityServer4 files.
-            supportingFiles.add(new SupportingFile("Attributes" + File.separator + "ValidateModelStateAttribute.cs",
+            supportingFiles.add(new SupportingFile("Config.mustache", packageFolder, "Config.cs"));
+
+            supportingFiles.add(new SupportingFile("Attributes" + File.separator + "ValidateModelStateAttribute.mustache",
                 packageFolder + File.separator + "Attributes", "ValidateModelStateAttribute.cs"));
             supportingFiles.add(new SupportingFile("Quickstart" + File.separator + "Extensions.cs", 
                 packageFolder + File.separator + "Quickstart", "Extensions.cs"));
@@ -353,6 +355,50 @@ public class AspNetCoreIs4ServerCodegen extends AbstractCSharpCodegen {
                 packageFolder + File.separator + "Quickstart" + File.separator + "Home", "ErrorViewModel.cs"));
             supportingFiles.add(new SupportingFile("Quickstart" + File.separator + "Home" + File.separator + "HomeController.cs", 
                 packageFolder + File.separator + "Quickstart" + File.separator + "Home", "HomeController.cs"));
+
+            supportingFiles.add(new SupportingFile("Views" + File.separator + "_ViewImports.cshtml", 
+                packageFolder + File.separator + "Views", "_ViewImports.cshtml"));
+            supportingFiles.add(new SupportingFile("Views" + File.separator + "_ViewStart.cshtml", 
+                packageFolder + File.separator + "Views", "_ViewStart.cshtml"));
+
+            supportingFiles.add(new SupportingFile("Views" + File.separator + "Account" + File.separator + "LoggedOut.cshtml", 
+                packageFolder + File.separator + "Views" + File.separator + "Account", "LoggedOut.cshtml"));
+            supportingFiles.add(new SupportingFile("Views" + File.separator + "Account" + File.separator + "Login.cshtml", 
+                packageFolder + File.separator + "Views" + File.separator + "Account", "Login.cshtml"));
+            supportingFiles.add(new SupportingFile("Views" + File.separator + "Account" + File.separator + "Logout.cshtml", 
+                packageFolder + File.separator + "Views" + File.separator + "Account", "Logout.cshtml"));
+
+            supportingFiles.add(new SupportingFile("Views" + File.separator + "Consent" + File.separator + "_ScopeListItem.cshtml", 
+                packageFolder + File.separator + "Views" + File.separator + "Consent", "_ScopeListItem.cshtml"));
+            supportingFiles.add(new SupportingFile("Views" + File.separator + "Consent" + File.separator + "Index.cshtml", 
+                packageFolder + File.separator + "Views" + File.separator + "Consent", "Index.cshtml"));
+
+            supportingFiles.add(new SupportingFile("Views" + File.separator + "Device" + File.separator + "Success.cshtml", 
+                packageFolder + File.separator + "Views" + File.separator + "Device", "Success.cshtml"));
+            supportingFiles.add(new SupportingFile("Views" + File.separator + "Device" + File.separator + "UserCodeCapture.cshtml", 
+                packageFolder + File.separator + "Views" + File.separator + "Device", "UserCodeCapture.cshtml"));
+            supportingFiles.add(new SupportingFile("Views" + File.separator + "Device" + File.separator + "UserCodeConfirmation.cshtml", 
+                packageFolder + File.separator + "Views" + File.separator + "Device", "UserCodeConfirmation.cshtml"));
+
+            supportingFiles.add(new SupportingFile("Views" + File.separator + "Diagnostics" + File.separator + "Index.cshtml", 
+                packageFolder + File.separator + "Views" + File.separator + "Diagnostics", "Index.cshtml"));
+
+            supportingFiles.add(new SupportingFile("Views" + File.separator + "Grants" + File.separator + "Index.cshtml", 
+                packageFolder + File.separator + "Views" + File.separator + "Grants", "Index.cshtml"));
+
+            supportingFiles.add(new SupportingFile("Views" + File.separator + "Home" + File.separator + "Index.cshtml", 
+                packageFolder + File.separator + "Views" + File.separator + "Home", "Index.cshtml"));
+
+            supportingFiles.add(new SupportingFile("Views" + File.separator + "Shared" + File.separator + "_Layout.cshtml", 
+                packageFolder + File.separator + "Views" + File.separator + "Shared", "_Layout.cshtml"));
+            supportingFiles.add(new SupportingFile("Views" + File.separator + "Shared" + File.separator + "_ScopeListItem.cshtml", 
+                packageFolder + File.separator + "Views" + File.separator + "Shared", "_ScopeListItem.cshtml"));
+            supportingFiles.add(new SupportingFile("Views" + File.separator + "Shared" + File.separator + "_ValidationSummary.cshtml", 
+                packageFolder + File.separator + "Views" + File.separator + "Shared", "_ValidationSummary.cshtml"));
+            supportingFiles.add(new SupportingFile("Views" + File.separator + "Shared" + File.separator + "Error.cshtml", 
+                packageFolder + File.separator + "Views" + File.separator + "Shared", "Error.cshtml"));
+            supportingFiles.add(new SupportingFile("Views" + File.separator + "Shared" + File.separator + "Redirect.cshtml", 
+                packageFolder + File.separator + "Views" + File.separator + "Shared", "Redirect.cshtml"));
         } else {
             supportingFiles.add(new SupportingFile("Project.nuspec.mustache", packageFolder, packageName + ".nuspec"));
         }
