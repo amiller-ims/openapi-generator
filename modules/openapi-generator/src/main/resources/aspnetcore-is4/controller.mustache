@@ -37,8 +37,8 @@ namespace {{apiPackage}}
         [Consumes("{{{mediaType}}}")]{{/consumes}}{{#produces}}
         [Produces("{{{mediaType}}}")]{{/produces}}
         [ValidateModelState]{{#useSwashbuckle}}{{#responses}}
-        {{#wildcard}}[ProducesDefaultResponseType{{#dataType}}(typeof({{&dataType}})){{/dataType}}]{{/wildcard}}{{^wildcard}}[SwaggerResponse(statusCode: {{code}}{{#dataType}}, type: typeof({{&dataType}}){{/dataType}}{{#message}}, description: "{{message}}"{{/message}})]{{/wildcard}}{{/responses}}{{/useSwashbuckle}}{{#authMethods}}{{{#isOAuth}}}
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]{{{/isOAuth}}}{{/authMethods}}
+        {{#wildcard}}[ProducesDefaultResponseType{{#dataType}}(typeof({{&dataType}})){{/dataType}}]{{/wildcard}}{{^wildcard}}[SwaggerResponse(statusCode: {{code}}{{#dataType}}, type: typeof({{&dataType}}){{/dataType}}{{#message}}, description: "{{message}}"{{/message}})]{{/wildcard}}{{/responses}}{{/useSwashbuckle}}{{#authMethods}}{{#isOAuth}}
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]{{/isOAuth}}{{/authMethods}}
         public {{operationModifier}} {{#operationResultTask}}{{#operationIsAsync}}async {{/operationIsAsync}}Task<{{/operationResultTask}}IActionResult{{#operationResultTask}}>{{/operationResultTask}} {{operationId}}({{#allParams}}{{>pathParam}}{{>queryParam}}{{>bodyParam}}{{>formParam}}{{>headerParam}}{{#hasMore}}, {{/hasMore}}{{/allParams}}){{^generateBody}};{{/generateBody}}
         {{#generateBody}}
         { {{#responses}}{{^wildcard}}
