@@ -278,17 +278,34 @@ public class AspNetCoreIs4ServerCodegen extends AbstractCSharpCodegen {
 
             supportingFiles.add(new SupportingFile("Startup.mustache", packageFolder, "Startup.cs"));
             supportingFiles.add(new SupportingFile("Program.mustache", packageFolder, "Program.cs"));
+            supportingFiles.add(new SupportingFile("Attributes" + File.separator + "ValidateModelStateAttribute.mustache",
+                packageFolder + File.separator + "Attributes", "ValidateModelStateAttribute.cs"));
             supportingFiles.add(new SupportingFile("Properties" + File.separator + "launchSettings.json",
-                    packageFolder + File.separator + "Properties", "launchSettings.json"));
+                packageFolder + File.separator + "Properties", "launchSettings.json"));
+    
             // wwwroot files.
             supportingFiles.add(new SupportingFile("wwwroot" + File.separator + "openapi-original.mustache",
-                    packageFolder + File.separator + "wwwroot", "openapi-original.json"));
+                packageFolder + File.separator + "wwwroot", "openapi-original.json"));
+            supportingFiles.add(new SupportingFile("wwwroot" + File.separator + "favicon.ico",
+                packageFolder + File.separator + "wwwroot", "favicon.ico"));
+            supportingFiles.add(new SupportingFile("wwwroot" + File.separator + "icon.jpg",
+                packageFolder + File.separator + "wwwroot", "icon.jpg"));
+            supportingFiles.add(new SupportingFile("wwwroot" + File.separator + "icon.png",
+                packageFolder + File.separator + "wwwroot", "icon.png"));
+            supportingFiles.add(new SupportingFile("wwwroot" + File.separator + "css" + File.separator + "site.css",
+                packageFolder + File.separator + "wwwroot" + File.separator + "css", "site.css"));
+            supportingFiles.add(new SupportingFile("wwwroot" + File.separator + "css" + File.separator + "site.less",
+                packageFolder + File.separator + "wwwroot" + File.separator + "css", "site.less"));
+            supportingFiles.add(new SupportingFile("wwwroot" + File.separator + "css" + File.separator + "site.min.css",
+                packageFolder + File.separator + "wwwroot" + File.separator + "css", "site.min.css"));
+            supportingFiles.add(new SupportingFile("wwwroot" + File.separator + "js" + File.separator + "signin-redirect.js",
+                packageFolder + File.separator + "wwwroot" + File.separator + "js", "signin-redirect.js"));
+            supportingFiles.add(new SupportingFile("wwwroot" + File.separator + "js" + File.separator + "signout-redirect.js",
+                packageFolder + File.separator + "wwwroot" + File.separator + "js", "signout-redirect.js"));
             
             // IdentityServer4 files.
             supportingFiles.add(new SupportingFile("Config.mustache", packageFolder, "Config.cs"));
 
-            supportingFiles.add(new SupportingFile("Attributes" + File.separator + "ValidateModelStateAttribute.mustache",
-                packageFolder + File.separator + "Attributes", "ValidateModelStateAttribute.cs"));
             supportingFiles.add(new SupportingFile("Quickstart" + File.separator + "Extensions.cs", 
                 packageFolder + File.separator + "Quickstart", "Extensions.cs"));
             supportingFiles.add(new SupportingFile("Quickstart" + File.separator + "SecurityHeadersAttribute.cs", 
