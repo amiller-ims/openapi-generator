@@ -15,7 +15,7 @@ namespace {{modelPackage}}
     /// {{& description}}
     /// </summary>
     [DataContract]
-    public {{#modelClassModifier}}{{modelClassModifier}} {{/modelClassModifier}}class {{classname}} : {{#parent}}{{{parent}}}, {{/parent}}IEquatable<{{classname}}>
+    public {{#modelClassModifier}}{{modelClassModifier}} {{/modelClassModifier}}class {{classname}} : IEquatable<{{classname}}>
     { 
         /// <summary>
         /// Default constructor for {{classname}}
@@ -45,6 +45,14 @@ namespace {{modelPackage}}
         {{/hasMore}}
         {{/vars}}
 
+        {{#parent}}
+        /// <summary>
+        /// Additional properties of the object
+        /// </summary>
+        [JsonExtensionData]
+        public {{{parent}}} AdditionalProperties { get; set; }
+        {{/parent}}
+
         /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
@@ -55,7 +63,9 @@ namespace {{modelPackage}}
             sb.Append("class {{classname}} {\n");
             {{#vars}}
             sb.Append("  {{name}}: ").Append({{name}}).Append("\n");
-            {{/vars}}
+            {{/vars}}{{#parent}}
+            sb.Append("  AdditionalProperties: ").Append(AdditionalProperties).Append("\n");
+            {{/parent}}
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -104,7 +114,13 @@ namespace {{modelPackage}}
                     {{^vendorExtensions.isValueType}}{{name}} != null &&
                     other.{{name}} != null &&
                     {{/vendorExtensions.isValueType}}{{name}}.SequenceEqual(other.{{name}})
-                ){{#hasMore}} && {{/hasMore}}{{/isContainer}}{{/vars}}{{^vars}}false{{/vars}};
+                ){{#hasMore}} && {{/hasMore}}{{/isContainer}}{{/vars}}{{^vars}}false{{/vars}}{{^parent}};{{/parent}}{{#parent}} &&
+                (
+                    AdditionalProperties == other.AdditionalProperties ||
+                    AdditionalProperties != null &&
+                    other.AdditionalProperties != null &&
+                    AdditionalProperties.SequenceEqual(other.AdditionalProperties)
+                );{{/parent}}
         }
 
         /// <summary>
@@ -119,7 +135,9 @@ namespace {{modelPackage}}
                 {{#vars}}
                 {{^vendorExtensions.isValueType}}if ({{name}} != null)
 		    {{/vendorExtensions.isValueType}}        hashCode = hashCode * 59 + {{name}}.GetHashCode();
-                {{/vars}}
+                {{/vars}}{{#parent}}if (AdditionalProperties != null)
+                    hashCode = hashCode * 59 + AdditionalProperties.GetHashCode();
+                {{/parent}}
                 return hashCode;
             }
         }
