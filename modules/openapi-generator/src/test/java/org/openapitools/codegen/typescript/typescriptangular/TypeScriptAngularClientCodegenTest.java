@@ -3,6 +3,9 @@ package org.openapitools.codegen.typescript.typescriptangular;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
+import io.swagger.v3.oas.models.media.ComposedSchema;
+import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import org.openapitools.codegen.CodegenOperation;
@@ -14,13 +17,23 @@ import org.testng.annotations.Test;
 
 public class TypeScriptAngularClientCodegenTest {
     @Test
+    public void testModelSuffix() {
+        TypeScriptAngularClientCodegen codegen = new TypeScriptAngularClientCodegen();
+        codegen.additionalProperties().put("modelSuffix", "MySuffix");
+        codegen.processOpts();
+
+        Assert.assertEquals(codegen.toModelName("TestName"), "TestNameMySuffix");
+        Assert.assertEquals(codegen.toModelName("Error"), "ErrorMySuffix");
+    }
+
+    @Test
     public void testModelFileSuffix() {
         TypeScriptAngularClientCodegen codegen = new TypeScriptAngularClientCodegen();
         codegen.additionalProperties().put("modelFileSuffix", "MySuffix");
         codegen.additionalProperties().put("modelSuffix", "MySuffix");
         codegen.processOpts();
 
-        Assert.assertEquals("testNameMySuffix", codegen.toModelFilename("testName"));
+        Assert.assertEquals("./testNameMySuffix", codegen.toModelFilename("testName"));
     }
 
     @Test
@@ -109,4 +122,45 @@ public class TypeScriptAngularClientCodegenTest {
         Assert.assertEquals("TestName", codegen.removeModelPrefixSuffix("TestNameDefGhi"));
     }
 
+    @Test
+    public void testSchema() {
+        TypeScriptAngularClientCodegen codegen = new TypeScriptAngularClientCodegen();
+
+        ComposedSchema composedSchema = new ComposedSchema();
+
+        Schema<Object> schema1 = new Schema<>();
+        schema1.set$ref("SchemaOne");
+        Schema<Object> schema2 = new Schema<>();
+        schema2.set$ref("SchemaTwo");
+        Schema<Object> schema3 = new Schema<>();
+        schema3.set$ref("SchemaThree");
+
+        composedSchema.addAnyOfItem(schema1);
+        composedSchema.addAnyOfItem(schema2);
+        composedSchema.addAnyOfItem(schema3);
+
+        String schemaType = codegen.getSchemaType(composedSchema);
+        Assert.assertEquals(schemaType, "SchemaOne | SchemaTwo | SchemaThree");
+    }
+
+    @Test
+    public void testKebabCasedModelFilenames() {
+        TypeScriptAngularClientCodegen codegen = new TypeScriptAngularClientCodegen();
+        codegen.additionalProperties().put(TypeScriptAngularClientCodegen.FILE_NAMING, "kebab-case");
+        codegen.processOpts();
+
+        final String modelName = "FooResponse__links";
+        final Schema schema = new Schema()
+            .name(modelName)
+            .description("an inline model with name previously prefixed with underscore")
+            .addRequiredItem("self")
+            .addProperties("self", new StringSchema());
+
+        OpenAPI openAPI = TestUtils.createOpenAPIWithOneSchema("test", schema);
+        codegen.setOpenAPI(openAPI);
+
+        Assert.assertEquals(codegen.toModelImport(modelName), "model/foo-response-links");
+        Assert.assertEquals(codegen.toModelFilename(modelName), "./foo-response-links");
+
+    }
 }

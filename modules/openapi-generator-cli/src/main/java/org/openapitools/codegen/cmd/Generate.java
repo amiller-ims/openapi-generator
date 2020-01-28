@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,13 +18,7 @@
 package org.openapitools.codegen.cmd;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.openapitools.codegen.config.CodegenConfiguratorUtils.applyAdditionalPropertiesKvpList;
-import static org.openapitools.codegen.config.CodegenConfiguratorUtils.applyImportMappingsKvpList;
-import static org.openapitools.codegen.config.CodegenConfiguratorUtils.applyInstantiationTypesKvpList;
-import static org.openapitools.codegen.config.CodegenConfiguratorUtils.applyLanguageSpecificPrimitivesCsvList;
-import static org.openapitools.codegen.config.CodegenConfiguratorUtils.applyReservedWordsMappingsKvpList;
-import static org.openapitools.codegen.config.CodegenConfiguratorUtils.applySystemPropertiesKvpList;
-import static org.openapitools.codegen.config.CodegenConfiguratorUtils.applyTypeMappingsKvpList;
+import static org.openapitools.codegen.config.CodegenConfiguratorUtils.*;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.core.spi.FilterAttachable;
@@ -34,22 +28,17 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
-import org.openapitools.codegen.ClientOptInput;
-import org.openapitools.codegen.CodegenConstants;
-import org.openapitools.codegen.DefaultGenerator;
-import org.openapitools.codegen.GeneratorNotFoundException;
+
+import org.openapitools.codegen.*;
 import org.openapitools.codegen.config.CodegenConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * User: lanwen Date: 24.03.15 Time: 20:22
- */
-
 @Command(name = "generate", description = "Generate code with the specified generator.")
 public class Generate implements Runnable {
 
-    // private static final Logger LOGGER = LoggerFactory.getLogger(Generate.class);
+    CodegenConfigurator configurator;
+    Generator generator;
 
     @Option(name = {"-v", "--verbose"}, description = "verbose mode")
     private Boolean verbose;
@@ -71,7 +60,7 @@ public class Generate implements Runnable {
     private String templateDir;
 
     @Option(name = {"-e", "--engine"}, title = "templating engine",
-        description = "templating engine: \"mustache\" (default) or \"handlebars\" (beta)")
+            description = "templating engine: \"mustache\" (default) or \"handlebars\" (beta)")
     private String templatingEngine;
 
     @Option(
@@ -115,6 +104,10 @@ public class Generate implements Runnable {
             description = CodegenConstants.MODEL_PACKAGE_DESC)
     private String modelPackage;
 
+    @Option(name = {"--api-name-suffix"}, title = "api name suffix",
+            description = CodegenConstants.API_NAME_SUFFIX_DESC)
+    private String apiNameSuffix;
+
     @Option(name = {"--model-name-prefix"}, title = "model name prefix",
             description = CodegenConstants.MODEL_NAME_PREFIX_DESC)
     private String modelNamePrefix;
@@ -140,7 +133,7 @@ public class Generate implements Runnable {
     private List<String> typeMappings = new ArrayList<>();
 
     @Option(
-            name = {"--additional-properties"},
+            name = {"-p", "--additional-properties"},
             title = "additional properties",
             description = "sets additional properties that can be referenced by the mustache templates in the format of name=value,name=value."
                     + " You can also have multiple occurrences of this option.")
@@ -160,6 +153,12 @@ public class Generate implements Runnable {
                     + " You can also have multiple occurrences of this option.")
     private List<String> importMappings = new ArrayList<>();
 
+    @Option(
+            name = {"--server-variables"},
+            title = "server variables",
+            description = "sets server variables overrides for spec documents which support variable templating of servers.")
+    private List<String> serverVariableOverrides = new ArrayList<>();
+
     @Option(name = {"--invoker-package"}, title = "invoker package",
             description = CodegenConstants.INVOKER_PACKAGE_DESC)
     private String invokerPackage;
@@ -177,6 +176,10 @@ public class Generate implements Runnable {
 
     @Option(name = {"--library"}, title = "library", description = CodegenConstants.LIBRARY_DESC)
     private String library;
+
+    @Option(name = {"--git-host"}, title = "git host",
+            description = CodegenConstants.GIT_HOST_DESC)
+    private String gitHost;
 
     @Option(name = {"--git-user-id"}, title = "git user id",
             description = CodegenConstants.GIT_USER_ID_DESC)
@@ -249,13 +252,18 @@ public class Generate implements Runnable {
                     .ifPresent(FilterAttachable::clearAllFilters);
         }
 
-        // attempt to read from config file
-        CodegenConfigurator configurator = CodegenConfigurator.fromFile(configFile);
-
-        // if a config file wasn't specified or we were unable to read it
+        // this initial check allows for field-level package private injection (for unit testing)
         if (configurator == null) {
-            // createa a fresh configurator
-            configurator = new CodegenConfigurator();
+            if (configFile != null && configFile.length() > 0) {
+                // attempt to load from configFile
+                configurator = CodegenConfigurator.fromFile(configFile);
+            }
+
+            // if a config file wasn't specified, or we were unable to read it
+            if (configurator == null) {
+                // create a fresh configurator
+                configurator = new CodegenConfigurator();
+            }
         }
 
         // now override with any specified parameters
@@ -315,6 +323,10 @@ public class Generate implements Runnable {
             configurator.setModelPackage(modelPackage);
         }
 
+        if (isNotEmpty(apiNameSuffix)) {
+            configurator.setApiNameSuffix(apiNameSuffix);
+        }
+
         if (isNotEmpty(modelNamePrefix)) {
             configurator.setModelNamePrefix(modelNamePrefix);
         }
@@ -341,6 +353,10 @@ public class Generate implements Runnable {
 
         if (isNotEmpty(library)) {
             configurator.setLibrary(library);
+        }
+
+        if (isNotEmpty(gitHost)) {
+            configurator.setGitHost(gitHost);
         }
 
         if (isNotEmpty(gitUserId)) {
@@ -383,17 +399,28 @@ public class Generate implements Runnable {
             configurator.setStrictSpecBehavior(strictSpecBehavior);
         }
 
-        applySystemPropertiesKvpList(systemProperties, configurator);
+        if (systemProperties != null && !systemProperties.isEmpty()) {
+            System.err.println("[DEPRECATED] -D arguments after 'generate' are application arguments and not Java System Properties, please consider changing to -p, or apply your options to JAVA_OPTS, or move the -D arguments before the jar option.");
+            applySystemPropertiesKvpList(systemProperties, configurator);
+        }
         applyInstantiationTypesKvpList(instantiationTypes, configurator);
         applyImportMappingsKvpList(importMappings, configurator);
         applyTypeMappingsKvpList(typeMappings, configurator);
         applyAdditionalPropertiesKvpList(additionalProperties, configurator);
         applyLanguageSpecificPrimitivesCsvList(languageSpecificPrimitives, configurator);
         applyReservedWordsMappingsKvpList(reservedWordsMappings, configurator);
+        applyServerVariablesKvpList(serverVariableOverrides, configurator);
 
         try {
             final ClientOptInput clientOptInput = configurator.toClientOptInput();
-            new DefaultGenerator().opts(clientOptInput).generate();
+
+            // this null check allows us to inject for unit testing.
+            if (generator == null) {
+                generator = new DefaultGenerator();
+            }
+
+            generator.opts(clientOptInput);
+            generator.generate();
         } catch (GeneratorNotFoundException e) {
             System.err.println(e.getMessage());
             System.err.println("[error] Check the spelling of the generator's name and try again.");
