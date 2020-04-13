@@ -16,16 +16,22 @@
 
 package org.openapitools.codegen.languages;
 
+import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.openapitools.codegen.CodegenModel;
 import org.openapitools.codegen.CodegenProperty;
+import org.openapitools.codegen.CodegenSecurity;
 import org.openapitools.codegen.SupportingFile;
 import org.openapitools.codegen.meta.GeneratorMetadata;
 import org.openapitools.codegen.meta.Stability;
+import org.openapitools.codegen.utils.ModelUtils;
+import org.openapitools.codegen.utils.ProcessUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static org.openapitools.codegen.utils.StringUtils.camelize;
 
 public class GoClientExperimentalCodegen extends GoClientCodegen {
 
@@ -37,6 +43,7 @@ public class GoClientExperimentalCodegen extends GoClientCodegen {
         embeddedTemplateDir = templateDir = "go-experimental";
 
         usesOptionals = false;
+        useOneOfInterfaces = true;
 
         generatorMetadata = GeneratorMetadata.newBuilder(generatorMetadata).stability(Stability.EXPERIMENTAL).build();
     }
@@ -50,6 +57,11 @@ public class GoClientExperimentalCodegen extends GoClientCodegen {
     @Override
     public String getName() {
         return "go-experimental";
+    }
+
+    @Override
+    public String toGetter(String name) {
+        return "Get" + getterAndSetterCapitalize(name);
     }
 
     /**
@@ -67,10 +79,82 @@ public class GoClientExperimentalCodegen extends GoClientCodegen {
     public void processOpts() {
         super.processOpts();
         supportingFiles.add(new SupportingFile("utils.mustache", "", "utils.go"));
+
+        // Generate the 'signing.py' module, but only if the 'HTTP signature' security scheme is specified in the OAS.
+        Map<String, SecurityScheme> securitySchemeMap = openAPI != null ?
+           (openAPI.getComponents() != null ? openAPI.getComponents().getSecuritySchemes() : null) : null;
+        List<CodegenSecurity> authMethods = fromSecurity(securitySchemeMap);
+        if (ProcessUtils.hasHttpSignatureMethods(authMethods)) {
+            supportingFiles.add(new SupportingFile("signing.mustache", "", "signing.go"));
+        }
+    }
+
+    @Override
+    public String toModelName(String name) {
+        // underscoring would also lowercase the whole name, thus losing acronyms which are in capitals
+        return camelize(toModel(name, false));
+    }
+
+    public String escapeReservedWord(String name) {
+        if (this.reservedWordsMappings().containsKey(name)) {
+            return this.reservedWordsMappings().get(name);
+        }
+        return name + '_';
+    }
+
+    @Override
+    public String toEnumDefaultValue(String value, String datatype) {
+        String prefix = "";
+        if (enumClassPrefix) {
+            prefix = datatype.toUpperCase(Locale.ROOT) + "_";
+        }
+        return prefix + value;
+    }
+
+    @Override
+    public void updateCodegenPropertyEnum(CodegenProperty var) {
+        // make sure the inline enums have plain defaults (e.g. string, int, float)
+        String enumDefault = null;
+        if (var.isEnum && var.defaultValue != null) {
+            enumDefault = var.defaultValue;
+        }
+        super.updateCodegenPropertyEnum(var);
+        if (var.isEnum && enumDefault != null) {
+            var.defaultValue = enumDefault;
+        }
+    }
+
+    @Override
+    public String toDefaultValue(Schema p) {
+        p = ModelUtils.getReferencedSchema(this.openAPI, p);
+        if (ModelUtils.isStringSchema(p)) {
+            if (p.getDefault() != null) {
+                return "\"" + escapeText((String) p.getDefault()) + "\"";
+            }
+            return null;
+        }
+
+        return super.toDefaultValue(p);
+    }
+
+    @Override
+    public CodegenProperty fromProperty(String name, Schema p) {
+        CodegenProperty prop = super.fromProperty(name, p);
+        String cc = camelize(prop.name, true);
+        if (isReservedWord(cc)) {
+            cc = escapeReservedWord(cc);
+        }
+        prop.nameInCamelCase = cc;
+        return prop;
     }
 
     @Override
     public Map<String, Object> postProcessModels(Map<String, Object> objs) {
+        // The superclass determines the list of required golang imports. The actual list of imports
+        // depends on which types are used, some of which are changed in the code below (but then preserved
+        // and used through x-go-base-type in templates). So super.postProcessModels
+        // must be invoked at the beginning of this method.
+        objs = super.postProcessModels(objs);
 
         List<Map<String, Object>> models = (List<Map<String, Object>>) objs.get("models");
         for (Map<String, Object> m : models) {
@@ -82,7 +166,9 @@ public class GoClientExperimentalCodegen extends GoClientCodegen {
                 }
 
                 for (CodegenProperty param : model.vars) {
-                    if (!param.isNullable || param.isMapContainer || param.isListContainer) {
+                    param.vendorExtensions.put("x-go-base-type", param.dataType);
+                    if (!param.isNullable || param.isMapContainer || param.isListContainer ||
+                            param.isFreeFormObject || param.isAnyType) {
                         continue;
                     }
                     if (param.isDateTime) {
@@ -98,11 +184,18 @@ public class GoClientExperimentalCodegen extends GoClientCodegen {
                 }
             }
         }
-
-        // The superclass determines the list of required golang imports. The actual list of imports
-        // depends on which types are used, which is done in the code above. So super.postProcessModels
-        // must be invoked at the end of this method.
-        objs = super.postProcessModels(objs);
         return objs;
+    }
+
+    @Override
+    public void addImportsToOneOfInterface(List<Map<String, String>> imports) {
+        for (String i : Arrays.asList("fmt")) {
+            Map<String, String> oneImport = new HashMap<String, String>() {{
+                put("import", i);
+            }};
+            if (!imports.contains(oneImport)) {
+                imports.add(oneImport);
+            }
+        }
     }
 }

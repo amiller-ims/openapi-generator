@@ -117,9 +117,13 @@ Class | Method | HTTP request | Description
  - [AdditionalPropertiesClass](docs/AdditionalPropertiesClass.md)
  - [Animal](docs/Animal.md)
  - [ApiResponse](docs/ApiResponse.md)
+ - [Apple](docs/Apple.md)
+ - [AppleReq](docs/AppleReq.md)
  - [ArrayOfArrayOfNumberOnly](docs/ArrayOfArrayOfNumberOnly.md)
  - [ArrayOfNumberOnly](docs/ArrayOfNumberOnly.md)
  - [ArrayTest](docs/ArrayTest.md)
+ - [Banana](docs/Banana.md)
+ - [BananaReq](docs/BananaReq.md)
  - [Capitalization](docs/Capitalization.md)
  - [Cat](docs/Cat.md)
  - [CatAllOf](docs/CatAllOf.md)
@@ -135,6 +139,9 @@ Class | Method | HTTP request | Description
  - [FileSchemaTestClass](docs/FileSchemaTestClass.md)
  - [Foo](docs/Foo.md)
  - [FormatTest](docs/FormatTest.md)
+ - [Fruit](docs/Fruit.md)
+ - [FruitReq](docs/FruitReq.md)
+ - [GmFruit](docs/GmFruit.md)
  - [HasOnlyReadOnly](docs/HasOnlyReadOnly.md)
  - [HealthCheckResult](docs/HealthCheckResult.md)
  - [InlineObject](docs/InlineObject.md)
@@ -145,6 +152,7 @@ Class | Method | HTTP request | Description
  - [InlineObject5](docs/InlineObject5.md)
  - [InlineResponseDefault](docs/InlineResponseDefault.md)
  - [List](docs/List.md)
+ - [Mammal](docs/Mammal.md)
  - [MapTest](docs/MapTest.md)
  - [MixedPropertiesAndAdditionalPropertiesClass](docs/MixedPropertiesAndAdditionalPropertiesClass.md)
  - [Model200Response](docs/Model200Response.md)
@@ -163,6 +171,8 @@ Class | Method | HTTP request | Description
  - [SpecialModelName](docs/SpecialModelName.md)
  - [Tag](docs/Tag.md)
  - [User](docs/User.md)
+ - [Whale](docs/Whale.md)
+ - [Zebra](docs/Zebra.md)
 
 
 ## Documentation For Authorization
@@ -189,18 +199,6 @@ Note, each API key must be added to a map of `map[string]APIKey` where the key i
 
 ### bearer_test
 
-- **Type**: HTTP basic authentication
-
-Example
-
-```golang
-auth := context.WithValue(context.Background(), sw.ContextBasicAuth, sw.BasicAuth{
-    UserName: "username",
-    Password: "password",
-})
-r, err := client.Service.Operation(auth, args)
-```
-
 
 ### http_basic_test
 
@@ -216,6 +214,38 @@ auth := context.WithValue(context.Background(), sw.ContextBasicAuth, sw.BasicAut
 r, err := client.Service.Operation(auth, args)
 ```
 
+
+### http_signature_test
+
+- **Type**: HTTP signature authentication
+
+Example
+
+```golang
+	authConfig := sw.HttpSignatureAuth{
+		KeyId:                "my-key-id",
+		PrivateKeyPath:       "rsa.pem",
+		Passphrase:           "my-passphrase",
+		SigningScheme:        sw.HttpSigningSchemeHs2019,
+		SignedHeaders:        []string{
+			sw.HttpSignatureParameterRequestTarget, // The special (request-target) parameter expresses the HTTP request target.
+			sw.HttpSignatureParameterCreated,       // Time when request was signed, formatted as a Unix timestamp integer value.
+			"Host",                                 // The Host request header specifies the domain name of the server, and optionally the TCP port number.
+			"Date",                                 // The date and time at which the message was originated.
+			"Content-Type",                         // The Media type of the body of the request.
+			"Digest",                               // A cryptographic digest of the request body.
+		},
+		SigningAlgorithm:     sw.HttpSigningAlgorithmRsaPSS,
+		SignatureMaxValidity: 5 * time.Minute,
+	}
+	var authCtx context.Context
+	var err error
+	if authCtx, err = authConfig.ContextWithValue(context.Background()); err != nil {
+		// Process error
+	}
+	r, err = client.Service.Operation(auth, args)
+
+```
 
 ### petstore_auth
 
